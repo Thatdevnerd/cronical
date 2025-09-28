@@ -1,0 +1,3 @@
+Mysql DB opened
+Starting CNC server on 0.0.0.0:666
+Failed to listen: listen tcp 0.0.0.0:666: bind: address already in use

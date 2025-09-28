@@ -1,0 +1,2 @@
+Mysql DB opened
+listen tcp4 0.0.0.0:666: bind: address already in use

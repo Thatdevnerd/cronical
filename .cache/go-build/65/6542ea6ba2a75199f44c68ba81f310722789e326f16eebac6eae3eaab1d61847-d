@@ -1,0 +1,5 @@
+./boring.go
+./ecdsa.go
+./ecdsa_hashsignverify.go
+./ecdsa_legacy.go
+./ecdsa_noasm.go

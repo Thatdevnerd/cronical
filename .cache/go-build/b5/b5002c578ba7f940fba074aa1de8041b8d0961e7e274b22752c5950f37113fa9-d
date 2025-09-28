@@ -1,0 +1,6 @@
+./admin.go
+./attack.go
+./bot.go
+./clientList.go
+./database.go
+./main.go

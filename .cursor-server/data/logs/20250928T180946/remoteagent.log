@@ -1,0 +1,14 @@
+2025-09-28 18:09:49.600 [info] 
+
+
+
+
+2025-09-28 18:09:49.619 [info] Extension host agent started.
+2025-09-28 18:09:50.158 [info] [127.0.0.1][b8d20fe0][ManagementConnection] New connection established.
+2025-09-28 18:09:50.260 [info] [127.0.0.1][1be1c53f][ExtensionHostConnection] New connection established.
+2025-09-28 18:09:50.435 [info] Getting extensions control
+2025-09-28 18:09:54.402 [info] [127.0.0.1][1be1c53f][ExtensionHostConnection] <20295> Launched Extension Host Process.
+2025-09-28 18:09:54.941 [error] Error getting extensions control manifest Timeout getting extensions control
+2025-09-28 18:10:51.759 [info] [127.0.0.1][1be1c53f][ExtensionHostConnection] <20295> Extension Host Process exited with code: null, signal: SIGKILL.
+2025-09-28 18:10:51.968 [info] Cancelling previous shutdown timeout
+2025-09-28 18:10:51.969 [info] Last EH closed, waiting before shutting down

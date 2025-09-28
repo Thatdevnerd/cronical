@@ -1,0 +1,34 @@
+2025-09-28 08:39:17.213 [info] 
+
+
+
+
+2025-09-28 08:39:17.229 [info] Extension host agent started.
+2025-09-28 08:39:17.239 [info] Started initializing default profile extensions in extensions installation folder. file:///root/.cursor-server/extensions
+2025-09-28 08:39:17.252 [info] Completed initializing default profile extensions in extensions installation folder. file:///root/.cursor-server/extensions
+2025-09-28 08:39:17.608 [info] [127.0.0.1][6b0a0df1][ManagementConnection] New connection established.
+2025-09-28 08:39:17.633 [info] [127.0.0.1][c3a41ce3][ExtensionHostConnection] New connection established.
+2025-09-28 08:39:17.643 [info] Getting extensions control
+2025-09-28 08:39:17.709 [info] [127.0.0.1][c3a41ce3][ExtensionHostConnection] <2191> Launched Extension Host Process.
+2025-09-28 08:39:20.469 [info] [127.0.0.1][6b0a0df1][ManagementConnection] The client has disconnected gracefully, so the connection will be disposed.
+2025-09-28 08:39:20.749 [info] [127.0.0.1][c3a41ce3][ExtensionHostConnection] <2191> Extension Host Process exited with code: 0, signal: null.
+2025-09-28 08:39:20.749 [info] Cancelling previous shutdown timeout
+2025-09-28 08:39:20.750 [info] Last EH closed, waiting before shutting down
+2025-09-28 08:39:28.205 [info] [127.0.0.1][48c0cc79][ManagementConnection] New connection established.
+2025-09-28 08:39:28.317 [info] [127.0.0.1][2d7e32ef][ExtensionHostConnection] New connection established.
+2025-09-28 08:39:28.321 [info] [127.0.0.1][2d7e32ef][ExtensionHostConnection] <2445> Launched Extension Host Process.
+2025-09-28 08:44:20.752 [info] New EH opened, aborting shutdown
+2025-09-28 13:42:34.587 [warning] No ptyHost heartbeat after 6 seconds
+2025-09-28 18:03:13.987 [error] Error: spawn ENOMEM
+    at ChildProcess.spawn (node:internal/child_process:420:11)
+    at spawn (node:child_process:781:9)
+    at Object.execFile (node:child_process:352:17)
+    at exec (node:child_process:235:25)
+    at c (file:///root/.cursor-server/bin/3ccce8f55d8cca49f6d28b491a844c699b8719a0/out/server-main.js:87:12911)
+    at file:///root/.cursor-server/bin/3ccce8f55d8cca49f6d28b491a844c699b8719a0/out/server-main.js:88:638
+    at ChildProcess.exithandler (node:child_process:415:7)
+    at ChildProcess.emit (node:events:518:28)
+    at maybeClose (node:internal/child_process:1104:16)
+    at ChildProcess._handle.onexit (node:internal/child_process:304:5)
+2025-09-28 18:03:28.385 [warning] No ptyHost heartbeat after 6 seconds
+2025-09-28 18:04:00.088 [warning] No ptyHost heartbeat after 6 seconds

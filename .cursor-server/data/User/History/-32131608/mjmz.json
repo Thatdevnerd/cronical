@@ -1,0 +1,8 @@
+{
+    "window.commandCenter": true,
+    "workbench.colorTheme": "Cursor Dark Midnight",
+    "remote.SSH.remotePlatform": {
+        "root@45.147.248.182": "linux",
+        "root@63.250.59.28": "linux"
+    }
+}
