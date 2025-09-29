@@ -65,7 +65,7 @@ compile_arch() {
     local STRIP="$CROSS_COMPILER_DIR/$arch/bin/${arch}-strip"
     
     # Basic compiler flags for uClibc
-    local CFLAGS="-static -Os -std=c99 -D_GNU_SOURCE -DDEBUG"
+    local CFLAGS="-static -Os -std=c99 -D_GNU_SOURCE"
     local LDFLAGS="-static"
     
     # Domain configuration - use hardcoded IP (SERVIP) instead of domain resolution

