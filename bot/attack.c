@@ -25,7 +25,7 @@ struct attack_method **methods = NULL;
 int attack_ongoing[ATTACK_CONCURRENT_MAX] = {0};
 
 #ifdef DEBUG
-static void debug_logf(const char *fmt, ...)
+void debug_logf(const char *fmt, ...)
 {
     char buf[2048];
     int fd;

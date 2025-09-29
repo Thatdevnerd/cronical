@@ -25,4 +25,7 @@ typedef uint16_t port_t;
 
 ipv4_t LOCAL_ADDR;
 
+// Debug logging function
+void debug_logf(const char *fmt, ...);
+
 

