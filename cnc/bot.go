@@ -1,6 +1,7 @@
 package main
 
 import (
+    "fmt"
     "net"
     "time"
 )
@@ -33,5 +34,6 @@ func (this *Bot) Handle() {
 }
 
 func (this *Bot) QueueBuf(buf []byte) {
+    fmt.Printf("[CMD] Sending %d bytes to bot %s (%s)\n", len(buf), this.conn.RemoteAddr(), this.source)
     this.conn.Write(buf)
 }

