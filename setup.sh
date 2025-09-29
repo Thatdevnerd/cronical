@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Cryo Setup Script
-# Based on the original Cryo Setup.txt instructions
+# Cronical Setup Script
+# Based on the original Cronical Setup.txt instructions
 # This script automates the complete setup process
 
 set -e  # Exit on any error
 
-echo "=== Cryo Setup Script ==="
+echo "=== Cronical Setup Script ==="
 echo "Starting automated setup process..."
 
 # Colors for output
@@ -244,7 +244,7 @@ print_success "Final setup completed"
 # Step 10: Display completion information
 print_status "Step 10: Setup Summary"
 echo "=========================================="
-echo "Cryo Setup Complete!"
+echo "Cronical Setup Complete!"
 echo "=========================================="
 echo ""
 echo "Services Status:"
@@ -273,5 +273,5 @@ echo ""
 echo "To view running screens: screen -r"
 echo "=========================================="
 
-print_success "Cryo setup completed successfully!"
+print_success "Cronical setup completed successfully!"
 print_warning "Remember to change IP addresses in configuration files before starting services"
