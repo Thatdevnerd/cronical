@@ -13,8 +13,8 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-BOT_SOURCE_DIR="/root/bot"
-OUTPUT_DIR="/root/binaries"
+BOT_SOURCE_DIR="/root/boinker/bot"
+OUTPUT_DIR="/root/boinker/binaries"
 CROSS_COMPILER_DIR="/etc/xcompiler"
 
 # Create output directory

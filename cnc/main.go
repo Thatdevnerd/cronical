@@ -28,7 +28,7 @@ func main() {
             fmt.Println(err)
             continue
         }
-        fmt.Printf("[!] Connection from %s\n", conn.RemoteAddr().String())
+        fmt.Printf("[!] Connection from %s to port 666\n", conn.RemoteAddr().String())
         go initialHandler(conn)
     }
 }

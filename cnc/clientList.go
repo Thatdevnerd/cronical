@@ -51,7 +51,7 @@ func (this *ClientList) Distribution() map[string]int {
 
 func (this *ClientList) AddClient(c *Bot) {
     this.addQueue <- c
-	fmt.Printf("\x1b[0;36m[\x1b[0;37m!\x1b[0;36m] [\x1b[0;37m%s\x1b[0;36m] [\x1b[0;37m%s\x1b[0;36m] [\x1b[0;37mVoid Version 1.0\x1b[0;36m]\n", c.conn.RemoteAddr(), c.source)
+	fmt.Printf("\x1b[0;36m[\x1b[0;37m!\x1b[0;36m] [\x1b[0;37m%s\x1b[0;36m] [\x1b[0;37m%s\x1b[0;36m] [\x1b[0;37mVoid Version 1.0\x1b[0;36m] [\x1b[0;37mPort 666\x1b[0;36m]\n", c.conn.RemoteAddr(), c.source)
 }
 
 func (this *ClientList) DelClient(c *Bot) {

