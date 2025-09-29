@@ -1,3 +1,3 @@
-fixed version of cronical cnc and bot
+fixed version of cryo cnc and bot
 
 - bot needs a lot more love tho.
